@@ -1,5 +1,5 @@
 
-clear
+%clear
 load matrices.mat
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -19,6 +19,7 @@ elseif (netType == 'C')
 else
     M = D;
 end
+% Number of oscilators
 N = size(M,1);
 
 % coupling factor
@@ -27,7 +28,7 @@ M = coupFac * M;
 
 % tSpan
 if (netType == 'A')
-    tSpan = (0:1:100)';
+    tSpan = linspace(0,100,100)';
 elseif (netType == 'B')
     tSpan = (0:0.1:20)';
 elseif (netType == 'C')
@@ -51,7 +52,7 @@ Y = cell(1,numRuns);
 for i=1:numRuns
     
     % initial phases
-    ic = (rand(N,1)*2-1)*2*pi;
+    %ic = (rand(N,1)*2-1)*2*pi;
 
     [T{i},Y{i}] = kuramoto(ic,M,W,tSpan);
 end
