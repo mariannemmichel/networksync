@@ -4,7 +4,7 @@
 
 clear
 
-%%% Scale-free Community Network with Connection to External Network %%%
+%%% Scale-free Community Network %%%
 
 A = [ 0 1 1 1 1 1 1 1 1
       1 0 0 0 0 1 1 0 0 

@@ -25,19 +25,17 @@ numSensors = 1;
 numActuators = 1;
 
 % sensor gain
-senGain = 0.5;
-
-% actuator gain
-actGain = 0;
-
-% expanding adjacency matrix
-M = blkdiag(M,0);
+senGain = 0.1;
 
 % connecting the external system: sensor adjacency
-M(:,N+1) = [ 1 0 0 0 0 0 0 0 0 0 ]';
+sensorAdj = senGain * [ 1 0 0 0 0 0 0 0 0 ]';
 
-% connecting the external system: actuator adjacency
-M(N+1,:) = [ 1 0 0 0 0 0 0 0 0 0 ];
+if size(sensorAdj,1) ~= N
+    error('Sensor adjacency matrix does not have the right proportions!')
+end
+
+% sensor function
+sensorFunc = @(x,t) x;
 
 % time vector used for integration
 tSpan = linspace(0,100,200)';
@@ -46,20 +44,14 @@ tSpan = linspace(0,100,200)';
 thresh = 0.99;
 
 % natural frequencies of community
-W = 0.1*ones(N,1); 
-%W = normrnd(0,0.04,N,1);
+%W = 0.1*ones(N,1); 
+W = normrnd(0.1,1,N,1);
 
 % initial conditions
 if ~exist('IC','var')
     % initial phases of community
     IC = [-2.3 2.3315 0.3849 -3.1 4.9 2.5 -1.4911 -4 -3.6]'; 
     %IC = (rand(N,numRuns)*2-1)*2*pi;
-
-    % initial value of the sensor(s)
-    IC(N+1:N+numSensors,:) = pi*ones(numSensors,numRuns);
-
-    % initial value of the actuator(s)
-    IC(N+numSensors+1:N+numSensors+numActuators,:) = sin(-2.3)*ones(numActuators,numRuns);
 end
 
 % choose external system:
