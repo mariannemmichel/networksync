@@ -29,6 +29,7 @@ tSize = size(tSpan,1);
 T = cell(1,numRuns);
 Y = cell(1,numRuns);
 
+
 %%% ode %%%
 
 % param{1}(1) = number of community nodes
