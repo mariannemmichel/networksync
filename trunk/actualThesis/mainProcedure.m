@@ -1,71 +1,59 @@
 
 clear
-load matrices.mat
 
-%%%%%%%%%%%%%%
-netType = 'A';
-%%%%%%%%%%%%%%
-
-% number of runs
-numRuns = 1;
-
-% network adjacency matrix
-if (netType == 'A')
-    M = A;
+if exist('internalParams.m', 'file')
+    internalParams
+else
+    error('Parameter file not found. Exiting procedure.')
+    return
 end
-N = size(M,1)-1;
 
-% coupling factor
-coupFac = 1;
+if ~goOn
+    error('File specifying external system not found. Exiting procedure.')
+    return
+end
+
+% add coupling factor
 M = coupFac * M;
 
-% Sensor gain
-M(:,N+1)= 0.5 * M(:,N+1);
+% add sensor gain
+M(:,N+1)= senGain * M(:,N+1);
 
-% Actuator gain
-M(N+1,:)=0.0 * M(N+1,:);
+% add actuator gain
+M(N+1,:)= actGain * M(N+1,:);
 
-% tSpan
-if (netType == 'A')
-    tSpan = linspace(0,100,200)';
-end
-tsize = size(tSpan,1);
+% measure time vector
+tSize = size(tSpan,1);
 
-% threshold for DT
-thresh = 0.99;
-
-% natural frequencies of community
-W = 0.1*ones(N,1);
-%W = normrnd(0,0.04,N,1);
-
+% create solution vectors
 T = cell(1,numRuns);
 Y = cell(1,numRuns);
 
 %%% ode %%%
-% initial phases of community
-ic = [-2.3 2.3315 0.3849 -3.1 4.9 2.5 -1.4911  -4 -3.6]';%(rand(N,numRuns)*2-1)*2*pi;
-% initial value of the sensor
-ic(N+1,:) = pi+zeros(1,numRuns);
 
-% initial phase of external node
-ic(N+2,:) = pi+zeros(1,numRuns);
-
-% initial phase of actuator
-ic(N+3,:) = sin(-2.3)*ones(1,numRuns);
-
+% param{1}(1) = number of community nodes
+% param{1}(2) = dimension of external system
+% param{1}(3) = number of sensors connected
+% param{1}(4) = number of actuators connected
+% param{2} = adjacency matrix of community
+% param{3} = natural frequencies of community nodes
+% param{4} = function handle to external system ode
+param{1} = [N numExtStates numSensors numActuators];
+param{2} = M;
+param{3} = W;
+param{4} = extFun;
 
 for i=1:numRuns
-    IC=ic(:,i);
-    [T{i},Y{i}] = sync(IC,M,W,tSpan);
+    [T{i},Y{i}] = sync(IC(:,i),param,tSpan);
 end
 
-% corellation
-CORavg = zeros(N,N,tsize);
-for z=1:numRuns
-    COR = zeros(N,N,tsize);
-    for t=1:tsize
-                r = repmat(Y{z}(t,1:N),N,1);
-                COR(:,:,t) = cos(r'-r);
+% calculate corellation
+CORavg = zeros(N,N,tSize);
+for i=1:numRuns
+    COR = zeros(N,N,tSize);
+    for t=1:tSize
+        r = repmat(Y{i}(t,1:N),N,1);
+        COR(:,:,t) = cos(r'-r);
     end
     CORavg = CORavg + COR;
 end
@@ -78,7 +66,7 @@ DT = gt(CORavg,thresh);
 syncTime = zeros(N,N);
 for i=1:N
     for j=i+1:N
-        t=tsize;
+        t=tSize;
         while (DT(i,j,t) && t>1)
             t = t-1;
         end
@@ -87,19 +75,8 @@ for i=1:N
 end
 syncTime = squareform(syncTime + syncTime');
 
-% dendrogram
-% Z = linkage(syncTime,'average');
-% figure('Name',['Network ' netType ' - Trajectories of first run'],'NumberTitle','off')
-% plot(T{1},sin(Y{1}))
-% xlabel('Time --->')
-% ylabel('sin(Phases)')
-% set(gca,'YLim',[-1 1])
-% set(gca,'YTick',(-1:1:1))
-% %set(gca,'YTickLabel',{'0','pi','2pi'})
-% figure('Name',['Network ' netType ' - Dendrogram, average over ' num2str(numRuns) 'runs'],'NumberTitle','off')
-% dendrogram(Z,0);
-% xlabel('Nodes')
-% ylabel('Time --->')
-% %imagesc(squareform(syncTime));
-% 
-% save(['res' netType num2str(numRuns) '.mat'])
+% plot results
+
+% save results
+syncSave(saveParams);
+

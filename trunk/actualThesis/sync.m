@@ -1,18 +1,16 @@
 
-function [T,Y] = sync(ic,adj,w,tSpan)
+function [T,Y] = sync(ic,param,tSpan)
 
-    % param{1} = number of community nodes & dimension of external system
-    % param{2} = adjacency matrix of community
-    % param{3} = natural frequencies of all nodes
-    NextSys=1; % Dimension of external system
-    Nconections=2; % Number of sensors + actuators
+    % param{1}(1) = number of community nodes
+    % param{1}(2) = dimension of external system
+    % param{1}(3) = number of sensors connected
+    % param{1}(4) = number of actuators connected
+    % param{2} = adjacency matrix of the whole network
+    % param{3} = natural frequencies of community nodes
+    % param{4} = function handle to external system ode
     
-    param{1} = [size(ic,1)-Nconections-NextSys NextSys];
-    param{2} = adj;
-    param{3} = w;
-    opt=odeset('RelTol',1e-6);
-    
-    %[T Y] = ode45(@(t,y) odeSync(t,y,param),tSpan,ic);
+    opt = odeset('RelTol',1e-6);
+
     [T Y] = ode113(@(t,y) odeSync(t,y,param),tSpan,ic,opt);
     
 end % end sync
@@ -22,59 +20,69 @@ function dy= odeSync(t,y,param)
     % dy = change in phase
     % y  = phase
     
-    % Sizes of sub-systems
-    NComm=param{1}(1);
-    NextSys=param{1}(2);
+    % sizes of sub-systems
+    N = param{1}(1);
+    numExtStates = param{1}(2);
+    numSensors = param{1}(3);
+    numActuators = param{1}(4);
+    Ntot = N+numExtStates+numSensors+numActuators;
     
-    % Pre-allocation
-    dy=zeros(NComm+1+NextSys,1);
+    % external system function
+    extSys = param{4};
     
-    % Index for nodes in the network
-    indComm=1:NComm;
-    % Index of sensor
-    indSensor=NComm+1;
+    % pre-allocation
+    dy = zeros(Ntot,1);
     
-    % Index for the external system
-    indExt=(indSensor+1):(indSensor+NextSys);
-    natAdj=param{2}(indComm,indComm);
-    extAdj=param{2}(1:NComm,indSensor);
-
-    % Index of the Actuator
-    indActuator=indExt(end)+1;
+    % indices for nodes in the network
+    indComm = 1:N;
+    % indices of sensor(s)
+    indSensor = (N+1):(N+numSensors);
+    % indices of actuator(s)
+    indActuator = (N+numSensors+1):(N+numSensors+numActuators);
+    % indices for the external system
+    indExt = (N+numSensors+numActuators+1):(N+numSensors+numActuators+numExtStates);
     
-    extAct=param{2}(indSensor,1:NComm)~=0;
-    if sum(extAct)>1
-        disp('Error!!! Please connect only one!');
+    % adjacency matrices
+    commAdj = param{2}(indComm,indComm);
+    sensorAdj = param{2}(1:N,indSensor);
+    %actuatorAdj = param{2}(indSensor,1:N);
+    
+    actGain = param{2}(indSensor,1:N)~=0;
+    if sum(actGain)>1
+        disp('Error!!! Please connect only one actuator!');
         return
     end
-    extAct=sum(param{2}(indSensor,extAct));
+    actGain = sum(param{2}(indSensor,actGain));
     
     %actuator=sin(y(indComm(1)));
     %sensor=sin(y(indExt));
     
     % kuramoto:
     % dy = w + sum over j (k * sin(y(j) - y(i)))
-    r = repmat(y(indComm),1,NComm); 
-    dy(indComm,1) = param{3}(indComm) + sum(natAdj .* sin(r'-r),2) + ...
-          (t>20 & t<50)*extAdj(indComm)*y(indSensor,1);%extAdj(indComm)*sensor;
-  
-    dy(indExt)=extSys(t,y,param)+ extAct*y(indActuator,1); %extAct*actuator;%
+    r = repmat(y(indComm),1,N);
+    dy(indComm) = param{3}(indComm) + sum(commAdj .* sin(r'-r),2) + ...
+        sensorAdj(indComm) * y(indSensor,1);
+    %   (t>20 & t<50)*extAdj(indComm)*y(indSensor,1);
     
-    dy(indSensor,1)=gradSensor(y(indExt))*dy(indExt);%0;
+    dy(indSensor) = gradSensor(y(indExt)) * dy(indExt);
     
-    dy(indActuator,1)=gradActuator(y(indComm))*dy(indComm);%0;
+    dy(indActuator) = gradActuator(y(indComm)) * dy(indComm);
+    
+    dy(indExt) = extSys(t,y,param) + actGain * y(indActuator,1);
     
 end % end odeSync
 
-function dy = extSys(t,y,param)
-dy(1,1)=0;%(2*pi/60)*5;
-end % end extSys
-
 function ds=gradSensor(y)
+
     ds(1,1)=1;
-end
+
+end % end gradSensor
+
+
 function da=gradActuator(y)
-N=numel(y);
-da=zeros(1,N);
-da(1,1)=cos(y(1));
-end
+    N = numel(y);
+    da = zeros(1,N);
+    da(1,1) = cos(y(1));
+
+end % end gradActuator
+
