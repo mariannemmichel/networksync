@@ -29,3 +29,5 @@ function f = timePlot()
     imagesc(squareform(syncTime));
     
 end
+
+function

@@ -16,12 +16,6 @@ end
 % add coupling factor
 M = coupFac * M;
 
-% add sensor gain
-M(:,N+1)= senGain * M(:,N+1);
-
-% add actuator gain
-M(N+1,:)= actGain * M(N+1,:);
-
 % measure time vector
 tSize = size(tSpan,1);
 
@@ -34,15 +28,18 @@ Y = cell(1,numRuns);
 
 % param{1}(1) = number of community nodes
 % param{1}(2) = dimension of external system
-% param{1}(3) = number of sensors connected
-% param{1}(4) = number of actuators connected
-% param{2} = adjacency matrix of community
+% param{2} = adjacency matrix of the whole network
 % param{3} = natural frequencies of community nodes
 % param{4} = function handle to external system ode
-param{1} = [N numExtStates numSensors numActuators];
+% param{5}{1} = nodes in community with sensors
+% param{5}{2} = handle to sensor function
+% param{5}{3} = internal states of external system connected to actuator
+% param{5}{4} = handle to actuator function
+param{1} = [N numExtStates];
 param{2} = M;
 param{3} = W;
 param{4} = extFun;
+param{5} = {sensorAdj, sensorFunc, actuatorAdj, actuatorFunc};
 
 for i=1:numRuns
     [T{i},Y{i}] = sync(IC(:,i),param,tSpan);
@@ -77,6 +74,7 @@ end
 syncTime = squareform(syncTime + syncTime');
 
 % plot results
+%f = syncPlot();
 
 % save results
 save(['results/' saveParams '.mat'])
