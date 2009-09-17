@@ -83,5 +83,5 @@ switch extSys
 end
 
 % params to show in filename of result file
-saveParams = ['runs' numRuns];
+saveParams = ['runs' num2str(numRuns)];
 

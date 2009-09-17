@@ -78,5 +78,6 @@ syncTime = squareform(syncTime + syncTime');
 % plot results
 
 % save results
-syncSave(saveParams);
+save(['results/' saveParams '.mat'])
+
 
