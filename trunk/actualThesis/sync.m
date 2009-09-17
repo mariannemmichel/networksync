@@ -23,9 +23,7 @@ function dy= odeSync(t,y,param)
     % sizes of sub-systems
     N = param{1}(1);
     numExtStates = param{1}(2);
-    numSensors = param{1}(3);
-    numActuators = param{1}(4);
-    Ntot = N+numExtStates+numSensors+numActuators;
+    Ntot = N+numExtStates;
     
     % external system function
     extSys = param{4};
@@ -35,46 +33,43 @@ function dy= odeSync(t,y,param)
     
     % indices for nodes in the network
     indComm = 1:N;
-    % indices of sensor(s)
-    indSensor = (N+1):(N+numSensors);
-    % indices of actuator(s)
-    indActuator = (N+numSensors+1):(N+numSensors+numActuators);
     % indices for the external system
-    indExt = (N+numSensors+numActuators+1):(N+numSensors+numActuators+numExtStates);
+    indExt = (N+1):(N+numExtStates);
     
     % adjacency matrices
     commAdj = param{2}(indComm,indComm);
-    sensorAdj = param{2}(1:N,indSensor);
-    %actuatorAdj = param{2}(indSensor,1:N);
+    sensorAdj = param{2}(1:N,N+1);
+    actuatorAdj = param{2}(N+1,1:N);
     
-    actGain = param{2}(indSensor,1:N)~=0;
-    if sum(actGain)>1
-        disp('Error!!! Please connect only one actuator!');
-        return
-    end
-    actGain = sum(param{2}(indSensor,actGain));
+%     actGain = param{2}(indSensor,1:N)~=0;
+%     if sum(actGain)>1
+%         disp('Error!!! Please connect only one actuator!');
+%         return
+%     end
+%     actGain = sum(param{2}(indSensor,actGain));
     
-    %actuator=sin(y(indComm(1)));
-    %sensor=sin(y(indExt));
+
+    sensorSignals=sensorAdj(indComm)*sensorFunc(y(indExt));
+    actSignals=actuatorAdj*actFunc(y(indComm));    
     
     % kuramoto:
     % dy = w + sum over j (k * sin(y(j) - y(i)))
     r = repmat(y(indComm),1,N);
     dy(indComm) = param{3}(indComm) + sum(commAdj .* sin(r'-r),2) + ...
-        sensorAdj(indComm) * y(indSensor,1);
+                  sensorSignals;
     %   (t>20 & t<50)*extAdj(indComm)*y(indSensor,1);
     
-    dy(indSensor) = gradSensor(y(indExt)) * dy(indExt);
+%    dy(indSensor) = gradSensor(y(indExt)) * dy(indExt);
     
-    dy(indActuator) = gradActuator(y(indComm)) * dy(indComm);
+%    dy(indActuator) = gradActuator(y(indComm)) * dy(indComm);
     
-    dy(indExt) = extSys(t,y,param) + actGain * y(indActuator,1);
+    dy(indExt) = extSys(t,y,param) +  ExtActAdj*actSignals;
     
 end % end odeSync
 
-function ds=gradSensor(y)
+function s=sensorFunc(y,t)
 
-    ds(1,1)=1;
+    s=y(1);
 
 end % end gradSensor
 
