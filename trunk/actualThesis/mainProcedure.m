@@ -18,11 +18,6 @@ T = zeros(numRuns,1);
 Y = cell(1,numRuns);
 numS = numel(sigmaW);
 C = cell(1,numS);
-rhoN = cell(1,numS);
-rhoC = cell(1,numS);
-rhoInf = zeros(numS);
-tauC = zeros(numS);
-
 
 % param{1}(1) = number of community nodes
 % param{1}(2) = dimension of external system
@@ -62,23 +57,12 @@ for s=1:numS
         CORavg = CORavg + COR;
     end
     C{s} = CORavg / numRuns;
-    
-    % sync state of every node over time
-    rhoN{s} = squeeze(mean(C{s},1))';
-    % sync state of community over time
-    rhoC{s} = mean(rhoN{s},2);
-    % steady state sync value of community
-    rhoInf(s) = mean(rhoC{s}(end-20:end));
-    tauC(s) = T(find(rhoC{s} > (thresh*rhoInf(s)),1,'first'));
 
 end
 
 % plot results
-%f = syncPlot();
-% rhoInf
-plot(sigmaW,rhoInf,'.')
-% sync state over time
-plot(T,rhoC{1})
+syncPlot(T,Y{1}(:,N),N,C,thresh,threshTau,sigmaW,'rhoinf','tau','rho');
+
 
 % save results
 save(['results/' saveParams '.mat'])
