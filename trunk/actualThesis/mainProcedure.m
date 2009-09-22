@@ -5,12 +5,6 @@ if exist('internalParams.m', 'file')
     internalParams
 else
     error('Parameter file not found. Exiting procedure.')
-    return
-end
-
-if ~goOn
-    error('File specifying external system not found. Exiting procedure.')
-    return
 end
 
 % add coupling factor
@@ -20,11 +14,15 @@ M = coupFac * M;
 tSize = size(tSpan,1);
 
 % create solution vectors
-T = cell(1,numRuns);
+T = zeros(numRuns,1);
 Y = cell(1,numRuns);
+numS = numel(sigmaW);
+C = cell(1,numS);
+rhoN = cell(1,numS);
+rhoC = cell(1,numS);
+rhoInf = zeros(numS);
+tauC = zeros(numS);
 
-
-%%% ode %%%
 
 % param{1}(1) = number of community nodes
 % param{1}(2) = dimension of external system
@@ -37,44 +35,50 @@ Y = cell(1,numRuns);
 % param{5}{4} = handle to actuator function
 param{1} = [N numExtStates];
 param{2} = M;
-param{3} = W;
+param{3} = zeros(N,1);
 param{4} = extFun;
 param{5} = {sensorAdj, sensorFunc, actuatorAdj, actuatorFunc};
 
-for i=1:numRuns
-    [T{i},Y{i}] = sync(IC(:,i),param,tSpan);
-end
+opt = odeset('RelTol',1e-6);
 
-% calculate corellation
-CORavg = zeros(N,N,tSize);
-for i=1:numRuns
-    COR = zeros(N,N,tSize);
-    for t=1:tSize
-        r = repmat(Y{i}(t,1:N),N,1);
-        COR(:,:,t) = cos(r'-r);
+for s=1:numS
+
+    for i=1:numRuns
+        % calculate natural frequencies
+        param{3} = calcW(meanW(s),sigmaW(s),N);
+        
+        %ode
+        [T,Y{i}] = ode113(@(t,y) sync(t,y,param),tSpan,IC(:,i),opt);
     end
-    CORavg = CORavg + COR;
-end
-CORavg = CORavg / numRuns;
 
-% dynamic connectivity matrix
-DT = gt(CORavg,thresh);
-
-% pairwise sync time
-syncTime = zeros(N,N);
-for i=1:N
-    for j=i+1:N
-        t=tSize;
-        while (DT(i,j,t) && t>1)
-            t = t-1;
+    % calculate corellation
+    CORavg = zeros(N,N,tSize);
+    for i=1:numRuns
+        COR = zeros(N,N,tSize);
+        for t=1:tSize
+            r = repmat(Y{i}(t,1:N),N,1);
+            COR(:,:,t) = cos(r'-r);
         end
-        syncTime(i,j) = T{1}(t);
+        CORavg = CORavg + COR;
     end
+    C{s} = CORavg / numRuns;
+    
+    % sync state of every node over time
+    rhoN{s} = squeeze(mean(C{s},1))';
+    % sync state of community over time
+    rhoC{s} = mean(rhoN{s},2);
+    % steady state sync value of community
+    rhoInf(s) = mean(rhoC{s}(end-20:end));
+    tauC(s) = T(find(rhoC{s} > (thresh*rhoInf(s)),1,'first'));
+
 end
-syncTime = squareform(syncTime + syncTime');
 
 % plot results
 %f = syncPlot();
+% rhoInf
+plot(sigmaW,rhoInf,'.')
+% sync state over time
+plot(T,rhoC{1})
 
 % save results
 save(['results/' saveParams '.mat'])
