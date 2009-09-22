@@ -18,34 +18,19 @@ numRuns = 1;
 % add coupling factor
 coupFac = 1;
 
-% number of sensors connected
-numSensors = 1;
-
-% number of actuators connected
-numActuators = 1;
-
-% sensor gain
-senGain = 0.1;
-
-% connecting the external system: sensor adjacency
-sensorAdj = senGain * [ 1 0 0 0 0 0 0 0 0 ]';
-
-if size(sensorAdj,1) ~= N
-    error('Sensor adjacency matrix does not have the right proportions!')
-end
-
-% sensor function
-sensorFunc = @(x,t) x;
-
-% time vector used for integration
-tSpan = linspace(0,100,200)';
-
-% threshold for DT: when are nodes in sync
-thresh = 0.99;
+% standard deviation for distribution of W
+sigmaW = linspace(0,1,11);%[ 0.1, 0.5, 1 ];
+meanW = 0.1;
 
 % natural frequencies of community
-%W = 0.1*ones(N,1); 
-W = normrnd(0.1,1,N,1);
+calcW = @(meanW,sigmaW,N) normrnd(meanW,sigmaW,N,1);
+%calcW = @(meanW,sigmaW,N) 0.1*ones(N,1); 
+
+if numel(meanW) == 1
+    meanW = meanW * ones(1,numel(sigmaW));
+elseif numel(sigmaW) ~= numel(meanW)
+    error('Parameters for natural frequency distribution do not match. Exiting procedure.')
+end
 
 % initial conditions
 if ~exist('IC','var')
@@ -54,10 +39,15 @@ if ~exist('IC','var')
     %IC = (rand(N,numRuns)*2-1)*2*pi;
 end
 
+% time vector used for integration
+tSpan = linspace(0,100,200)';
+
+% threshold for DT: when are nodes in sync
+thresh = 0.99;
+
 % choose external system:
 extSys = 'defSys';
 
-goOn = 1;
 switch extSys
     case 'defSys'
         extFun = @defSys;
@@ -66,14 +56,40 @@ switch extSys
                 defSysParams
             else
                 error('File specifying external system parameters not found. Exiting procedure.')
-                goOn = 0;
             end
         else
             error('File specifying external system not found. Exiting procedure.')
-            goOn = 0;
         end
 end
 
+% sensor gain
+senGain = 0.1;
+
+% connecting the external system: sensor adjacency
+sensorAdj = senGain * [ 1 0 0 0 0 0 0 0 0 ]';
+
+if size(sensorAdj,1) ~= N
+    error('Sensor adjacency matrix does not have the right proportions. Exiting procedure.')
+end
+
+% sensor function
+sensorFunc = @(x,t) x;
+
+% actuator gain
+actGain = 0;
+
+% connecting the external system: actuator adjacency
+actuatorAdj = actGain * externAdj;
+
+% actuator function
+actuatorFunc = @(x,t) x(1);
+
+if size(actuatorAdj,1) ~= numExtStates
+    error('Actuator adjacency matrix does not have the right proportions!')
+end
+
 % params to show in filename of result file
-saveParams = ['runs' num2str(numRuns)];
+saveParams = datestr(clock);
+saveParams(saveParams == ':') = '-';
+saveParams(saveParams == ' ') = '_';
 
