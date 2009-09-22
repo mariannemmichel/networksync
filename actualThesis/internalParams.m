@@ -13,13 +13,13 @@ M = A;
 N = size(M,1);
 
 % number of runs
-numRuns = 1;
+numRuns = 10;
 
 % add coupling factor
 coupFac = 1;
 
 % standard deviation for distribution of W
-sigmaW = linspace(0,1,11);%[ 0.1, 0.5, 1 ];
+sigmaW = linspace(0,2,11);
 meanW = 0.1;
 
 % natural frequencies of community
@@ -35,15 +35,18 @@ end
 % initial conditions
 if ~exist('IC','var')
     % initial phases of community
-    IC = [-2.3 2.3315 0.3849 -3.1 4.9 2.5 -1.4911 -4 -3.6]'; 
-    %IC = (rand(N,numRuns)*2-1)*2*pi;
+    %IC = [-2.3 2.3315 0.3849 -3.1 4.9 2.5 -1.4911 -4 -3.6]'; 
+    IC = (rand(N,numRuns)*2-1)*2*pi;
 end
 
 % time vector used for integration
-tSpan = linspace(0,100,200)';
+tSpan = linspace(0,200,200)';
 
 % threshold for DT: when are nodes in sync
 thresh = 0.99;
+
+% threshold for calculating tau: max deviation of slope of mean
+threshTau = 1e-6;
 
 % choose external system:
 extSys = 'defSys';
