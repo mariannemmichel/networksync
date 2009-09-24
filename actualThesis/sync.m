@@ -10,6 +10,7 @@ function dy = sync(t,y,param)
     % param{5}{2} = handle to sensor function
     % param{5}{3} = internal states of external system connected to actuator
     % param{5}{4} = handle to actuator function
+    % param{6} = parameters for the external ode function
     
     % dy = change in phase
     % y  = phase
@@ -52,7 +53,7 @@ function dy = sync(t,y,param)
     dy(indComm,1) = W + sum(commAdj .* sin(r'-r),2) + ...
                   sensorSignals;
     
-    dy(indExt,1) = extSys(t,y,param) + actuatorSignals;
+    dy(indExt,1) = extSys(t,y,param{6}) + actuatorSignals;
 
 end % end sync
 
