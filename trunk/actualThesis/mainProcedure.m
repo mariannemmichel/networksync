@@ -16,8 +16,9 @@ tSize = size(tSpan,1);
 % create solution vectors
 T = zeros(numRuns,1);
 Y = cell(1,numRuns);
-numS = numel(sigmaW);
-C = cell(1,numS);
+numSigma = numel(sigmaW);
+numSgain = numel(senGain);%!!!
+C = cell(1,numSgain);%!!!
 
 % param{1}(1) = number of community nodes
 % param{1}(2) = dimension of external system
@@ -28,40 +29,46 @@ C = cell(1,numS);
 % param{5}{2} = handle to sensor function
 % param{5}{3} = internal states of external system connected to actuator
 % param{5}{4} = handle to actuator function
+% param{6} = parameters for the external ode function
 param{1} = [N numExtStates];
 param{2} = M;
 param{3} = zeros(N,1);
 param{4} = extFun;
-param{5} = {sensorAdj, sensorFunc, actuatorAdj, actuatorFunc};
+%param{5} = {sensorAdj, sensorFunc, actuatorAdj, actuatorFunc};
+param{6} = extParams;
 
 opt = odeset('RelTol',1e-6);
 
-for s=1:numS
-
-    for i=1:numRuns
-        % calculate natural frequencies
-        param{3} = calcW(meanW(s),sigmaW(s),N);
-        
-        %ode
-        [T,Y{i}] = ode113(@(t,y) sync(t,y,param),tSpan,IC(:,i),opt);
-    end
-
-    % calculate corellation
-    CORavg = zeros(N,N,tSize);
-    for i=1:numRuns
-        COR = zeros(N,N,tSize);
-        for t=1:tSize
-            r = repmat(Y{i}(t,1:N),N,1);
-            COR(:,:,t) = cos(r'-r);
+for ss=1:numSigma
+    for sg=1:numSgain
+        sg
+        sensorAdj = senGain(sg) * sensorAdj;
+        param{5} = {sensorAdj, sensorFunc, actuatorAdj, actuatorFunc};
+        for i=1:numRuns
+            % calculate natural frequencies
+            param{3} = calcW(meanW(ss),sigmaW(ss),N);
+            
+            % ode
+            [T,Y{i}] = ode113(@(t,y) sync(t,y,param),tSpan,IC(:,i),opt);
         end
-        CORavg = CORavg + COR;
-    end
-    C{s} = CORavg / numRuns;
 
+        % calculate corellation
+        CORavg = zeros(N,N,tSize);
+        for i=1:numRuns
+            COR = zeros(N,N,tSize);
+            for t=1:tSize
+                r = repmat(Y{i}(t,1:N),N,1);
+                COR(:,:,t) = cos(r'-r);
+            end
+            CORavg = CORavg + COR;
+        end
+        C{sg} = CORavg / numRuns;
+
+    end
 end
 
 % plot results
-syncPlot(T,Y{1}(:,N),N,C,thresh,threshTau,sigmaW,'rhoinf','tau','rho');
+%syncPlotSgain(T,Y,N,C,thresh,threshTau,senGain,'rhoinf','tau','rho','trajec');
 
 
 % save results
