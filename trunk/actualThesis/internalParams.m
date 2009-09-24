@@ -19,7 +19,7 @@ numRuns = 10;
 coupFac = 1;
 
 % standard deviation for distribution of W
-sigmaW = linspace(0,2,11);
+sigmaW = 0.2;%(0:0.1:1);
 meanW = 0.1;
 
 % natural frequencies of community
@@ -35,21 +35,21 @@ end
 % initial conditions
 if ~exist('IC','var')
     % initial phases of community
-    %IC = [-2.3 2.3315 0.3849 -3.1 4.9 2.5 -1.4911 -4 -3.6]'; 
-    IC = (rand(N,numRuns)*2-1)*2*pi;
+    IC = repmat([-2.3 2.3315 0.3849 -3.1 4.9 2.5 -1.4911 -4 -3.6]',1,numRuns); 
+    %IC = (rand(N,numRuns)*2-1)*2*pi;
 end
 
 % time vector used for integration
 tSpan = linspace(0,200,200)';
 
 % threshold for DT: when are nodes in sync
-thresh = 0.99;
+thresh = 0.9;
 
 % threshold for calculating tau: max deviation of slope of mean
 threshTau = 1e-6;
 
 % choose external system:
-extSys = 'defSys';
+extSys = 'hopfSys';
 
 switch extSys
     case 'defSys'
@@ -63,20 +63,33 @@ switch extSys
         else
             error('File specifying external system not found. Exiting procedure.')
         end
+    case 'hopfSys'
+        extFun = @hopfSys;
+        if exist('hopfSys.m', 'file')
+            if exist('hopfSysParams.m', 'file')
+                hopfSysParams
+            else
+                error('File specifying external system parameters not found. Exiting procedure.')
+            end
+        else
+            error('File specifying external system not found. Exiting procedure.')
+        end
+    otherwise
+        error('External system not found - Please check internal parameter file. Exiting procedure.')
 end
 
 % sensor gain
-senGain = 0.1;
+senGain = (0:2.5:10);
 
 % connecting the external system: sensor adjacency
-sensorAdj = senGain * [ 1 0 0 0 0 0 0 0 0 ]';
+sensorAdj = [ 1 0 0 0 0 0 0 0 0 ]';
 
 if size(sensorAdj,1) ~= N
     error('Sensor adjacency matrix does not have the right proportions. Exiting procedure.')
 end
 
 % sensor function
-sensorFunc = @(x,t) x;
+sensorFunc = @(x,t) sin(x(1));
 
 % actuator gain
 actGain = 0;
@@ -87,7 +100,7 @@ actuatorAdj = actGain * externAdj;
 % actuator function
 actuatorFunc = @(x,t) x(1);
 
-if size(actuatorAdj,1) ~= numExtStates
+if size(actuatorAdj,2) ~= numExtStates
     error('Actuator adjacency matrix does not have the right proportions!')
 end
 
