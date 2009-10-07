@@ -3,14 +3,14 @@ function dy = sync(t,y,param)
     
     % param{1}(1) = number of community nodes
     % param{1}(2) = dimension of external system
-    % param{2} = adjacency matrix of the whole network
+    % param{2} = adjacency matrix of the internal network (community)
     % param{3} = natural frequencies of community nodes
     % param{4} = function handle to external system ode
-    % param{5}{1} = nodes in community with sensors
-    % param{5}{2} = handle to sensor function
-    % param{5}{3} = internal states of external system connected to actuator
-    % param{5}{4} = handle to actuator function
-    % param{6} = parameters for the external ode function
+    % param{5}(1) = adjacency matrix: sensor connection
+    % param{5}(2) = handle to sensor function
+    % param{5}(3) = adjacency matrix: actuator connection
+    % param{5}(4) = handle to actuator function
+    % param{6} = parameters for the external system
     
     % dy = change in phase
     % y  = phase
