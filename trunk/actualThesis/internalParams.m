@@ -13,14 +13,14 @@ M = A;
 N = size(M,1);
 
 % number of runs
-numRuns = 10;
+numRuns = 30;
 
 % add coupling factor
 coupFac = 1;
 
 % standard deviation for distribution of W
-sigmaW = 0.2;%(0:0.1:1);
-meanW = 0.1;
+sigmaW = 0.3;%(0:0.1:2);
+meanW = 2;
 
 % natural frequencies of community
 calcW = @(meanW,sigmaW,N) normrnd(meanW,sigmaW,N,1);
@@ -35,12 +35,15 @@ end
 % initial conditions
 if ~exist('IC','var')
     % initial phases of community
-    IC = repmat([-2.3 2.3315 0.3849 -3.1 4.9 2.5 -1.4911 -4 -3.6]',1,numRuns); 
-    %IC = (rand(N,numRuns)*2-1)*2*pi;
+    %IC = repmat([-2.3 2.3315 0.3849 -3.1 4.9 2.5 -1.4911 -4 -3.6]',1,numRuns); 
+    IC = (rand(N,numRuns)*2-1)*2*pi;
 end
 
 % time vector used for integration
-tSpan = linspace(0,200,200)';
+% Fs: sampling frequency
+Fs = 10;
+dt = 1/Fs;
+tSpan = (0:dt:100)';
 
 % threshold for DT: when are nodes in sync
 thresh = 0.9;
@@ -79,7 +82,7 @@ switch extSys
 end
 
 % sensor gain
-senGain = (0:2.5:10);
+senGain = (0:0.5:10);%3;
 
 % connecting the external system: sensor adjacency
 sensorAdj = [ 1 0 0 0 0 0 0 0 0 ]';
@@ -92,15 +95,15 @@ end
 sensorFunc = @(x,t) sin(x(1));
 
 % actuator gain
-actGain = 0;
+actGain = 0;%(0:0.5:10);
 
 % connecting the external system: actuator adjacency
-actuatorAdj = actGain * externAdj;
+%actuatorAdj = actGain * externAdj;
 
 % actuator function
 actuatorFunc = @(x,t) x(1);
 
-if size(actuatorAdj,2) ~= numExtStates
+if size(externAdj,2) ~= numExtStates
     error('Actuator adjacency matrix does not have the right proportions!')
 end
 
