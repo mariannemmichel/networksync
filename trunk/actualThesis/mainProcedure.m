@@ -20,8 +20,8 @@ tSize = size(tSpan,1);
 % param{4} = function handle to external system ode
 % param{5}(1) = adjacency matrix: sensor connection
 % param{5}(2) = handle to sensor function
-% param{5}(3) = adjacency matrix: actuator connection
-% param{5}(4) = handle to actuator function
+% param{5}(3) = handle to actuator function
+% param{5}(4) = actuator gain
 % param{6} = parameters for the external system
 param = cell(6,1);
 param{1} = [N numExtStates];
@@ -56,13 +56,16 @@ elseif numAgain>1
     numIncrem = numAgain;
     meanW = meanW * ones(1,numIncrem);
     sigmaW = sigmaW * ones(1,numIncrem);
+else
+    dispIncrem = 'Actuator Gain';
+    increm = actGain;
+    numIncrem = numAgain;
 end
     
 C = cell(1,numIncrem);
 Y = cell(numIncrem,numRuns);
 
 sensorAdj = senGain(1) * sensorAdj;
-actuatorAdj = actGain(1) * externAdj;
             
 opt = odeset('RelTol',1e-6);
 
@@ -70,13 +73,14 @@ for s=1:numIncrem
     
     display(['Running ODE for ' dispIncrem ' = ' num2str(increm(s)) '...'])
     
+    aG = actGain;
     if strcmp(dispIncrem,'Sensor Gain')
         sensorAdj = senGain(s) * sensorAdj;
     elseif strcmp(dispIncrem,'Actuator Gain')
-        actuatorAdj = actGain(s) * externAdj;
+        aG = actGain(s);
     end
        
-    param{5} = {sensorAdj, sensorFunc, actuatorAdj, actuatorFunc};
+    param{5} = {sensorAdj, sensorFunc, actuatorFunc, aG};
     
     for i=1:numRuns
         
@@ -84,7 +88,7 @@ for s=1:numIncrem
         
         % calculate natural frequencies
         param{3} = calcW(meanW(s),sigmaW(s),N);
-        param{3}(1) = meanW(2); % hub gets no noise 
+        param{3}(1) = meanW(1); % hub gets no noise 
 
         % ode
         [T,Y{s,i}] = ode113(@(t,y) sync(t,y,param),tSpan,IC(:,i),opt);
