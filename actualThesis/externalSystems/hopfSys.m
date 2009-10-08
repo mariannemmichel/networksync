@@ -1,14 +1,14 @@
 
-function dy = hopfSys(t,y,param)
+function dy = hopfSys(t,y,param,inputSignals,actGain)
 
     mu = param(1);
-    E0 = param(2);
-    k2 = param(3)^2;
-    E = y(2)^2/2 + k2*y(1)^2/2;
+    tau = param(2);
     
-    % dTheta = omega
-    dy(1) = y(2);
-    % dOmega
-    dy(2) = -mu/E0*(E-E0)*y(2) - k2*y(1);
-
+    % dR
+    dy(1) = (mu - y(1)^2)*y(1) + cos(y(2))*actGain*inputSignals;
+    % dPhi
+    dy(2) = y(3) - 1/y(1)*sin(y(2))*actGain*inputSignals;
+    %dOmega
+    dy(3) = -1/tau*sin(y(2))*actGain*inputSignals;
+    
 end % end hopfSys
