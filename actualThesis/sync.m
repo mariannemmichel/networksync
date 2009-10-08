@@ -1,4 +1,4 @@
-
+ 
 function dy = sync(t,y,param)
     
     % param{1}(1) = number of community nodes
@@ -8,8 +8,8 @@ function dy = sync(t,y,param)
     % param{4} = function handle to external system ode
     % param{5}(1) = adjacency matrix: sensor connection
     % param{5}(2) = handle to sensor function
-    % param{5}(3) = adjacency matrix: actuator connection
-    % param{5}(4) = handle to actuator function
+    % param{5}(3) = handle to actuator function
+    % param{5}(4) = actuator gain
     % param{6} = parameters for the external system
     
     % dy = change in phase
@@ -38,14 +38,13 @@ function dy = sync(t,y,param)
     % adjacency matrices
     commAdj = param{2};
     sensorAdj = param{5}{1};
-    actuatorAdj = param{5}{3};
+    actGain = param{5}{4};
     
     % sensor & actuator functions
     sensorFunc=param{5}{2};
-    actuatorFunc=param{5}{4};
-    
+    actuatorFunc=param{5}{3};
     sensorSignals=sensorAdj*sensorFunc(y(indExt),t);
-    actuatorSignals=actuatorAdj*actuatorFunc(y(indComm));    
+    actuatorSignals=actuatorFunc(y(indComm),t);
     
     % kuramoto:
     % dy = w + sum over j (k * sin(y(j) - y(i)))
@@ -53,7 +52,7 @@ function dy = sync(t,y,param)
     dy(indComm,1) = W + sum(commAdj .* sin(r'-r),2) + ...
                   sensorSignals;
     
-    dy(indExt,1) = extSys(t,y,param{6}) + actuatorSignals;
+    dy(indExt,1) = extSys(t,y,param{6},actuatorSignals,actGain);
 
 end % end sync
 
