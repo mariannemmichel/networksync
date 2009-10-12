@@ -20,7 +20,7 @@ coupFac = 1;
 
 % standard deviation for distribution of W
 sigmaW = 0.3;%(0:0.1:2);
-meanW = 2;
+meanW = 4*pi;
 
 % natural frequencies of community
 calcW = @(meanW,sigmaW,N) normrnd(meanW,sigmaW,N,1);
@@ -41,9 +41,9 @@ end
 
 % time vector used for integration
 % Fs: sampling frequency
-Fs = 10;
+Fs = 50;
 dt = 1/Fs;
-tSpan = (0:dt:100)';
+tSpan = (0:dt:30)';%(0:dt:50)';
 
 % threshold for DT: when are nodes in sync
 thresh = 0.9;
@@ -66,6 +66,17 @@ switch extSys
         else
             error('File specifying external system not found. Exiting procedure.')
         end
+    case 'canonicalNLOSys'
+        extFun = @canonicalNLOSys;
+        if exist('canonicalNLOSys.m', 'file')
+            if exist('canonicalNLOSysParams.m', 'file')
+                canonicalNLOSysParams
+            else
+                error('File specifying external system parameters not found. Exiting procedure.')
+            end
+        else
+            error('File specifying external system not found. Exiting procedure.')
+        end
     case 'hopfSys'
         extFun = @hopfSys;
         if exist('hopfSys.m', 'file')
@@ -82,7 +93,7 @@ switch extSys
 end
 
 % sensor gain
-senGain = (0:0.5:10);%3;
+senGain = (0:0.5:10);
 
 % connecting the external system: sensor adjacency
 sensorAdj = [ 1 0 0 0 0 0 0 0 0 ]';
@@ -92,20 +103,13 @@ if size(sensorAdj,1) ~= N
 end
 
 % sensor function
-sensorFunc = @(x,t) sin(x(1));
+sensorFunc = @(x,t) sin(x(2));
 
 % actuator gain
-actGain = 0;%(0:0.5:10);
-
-% connecting the external system: actuator adjacency
-%actuatorAdj = actGain * externAdj;
+actGain = 0;%(0:0.1:0.5);%(0:0.5:10);
 
 % actuator function
 actuatorFunc = @(x,t) x(1);
-
-if size(externAdj,2) ~= numExtStates
-    error('Actuator adjacency matrix does not have the right proportions!')
-end
 
 % params to show in filename of result file
 saveParams = datestr(clock);
