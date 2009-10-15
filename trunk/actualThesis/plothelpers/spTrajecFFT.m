@@ -25,7 +25,7 @@ function spTrajecFFT(T,Y,N,incrS,tellS,Yindext,doFFT,varargin)
             ylabel('sin( \theta )')
             set(gca,'YLim',[-1 1])
             set(gca,'YTick',(-1:1:1))
-            set(gca,'XLim',[0 20])
+            %set(gca,'XLim',[0 20])
             subplot(1,2,2)
             plot(f{s}(mind(s)),m(s),'ro',f{s}(mind(s)),0,'ro',f{s},X{s},'b-')
             legend(['Steady State Frequency:   ' num2str(f{s}(mind(s))) ' Hz'])
@@ -46,7 +46,7 @@ function spTrajecFFT(T,Y,N,incrS,tellS,Yindext,doFFT,varargin)
             ylabel('sin( \theta )')
             set(gca,'YLim',[-1 1])
             set(gca,'YTick',(-1:1:1))
-            set(gca,'XLim',[0 20])
+            %set(gca,'XLim',[0 20])
             pause
         end
     end
