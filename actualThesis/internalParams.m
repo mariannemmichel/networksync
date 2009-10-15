@@ -13,7 +13,7 @@ M = A;
 N = size(M,1);
 
 % number of runs
-numRuns = 30;
+numRuns = 3;
 
 % add coupling factor
 coupFac = 1;
@@ -43,7 +43,7 @@ end
 % Fs: sampling frequency
 Fs = 50;
 dt = 1/Fs;
-tSpan = (0:dt:30)';%(0:dt:50)';
+tSpan = (0:dt:100)';%(0:dt:50)';
 
 % threshold for DT: when are nodes in sync
 thresh = 0.9;
@@ -93,7 +93,7 @@ switch extSys
 end
 
 % sensor gain
-senGain = (0:0.5:10);
+senGain = 3;%(0:0.5:10);
 
 % connecting the external system: sensor adjacency
 sensorAdj = [ 1 0 0 0 0 0 0 0 0 ]';
@@ -106,10 +106,10 @@ end
 sensorFunc = @(x,t) sin(x(2));
 
 % actuator gain
-actGain = 0;%(0:0.1:0.5);%(0:0.5:10);
+actGain = 2;
 
 % actuator function
-actuatorFunc = @(x,t) x(1);
+actuatorFunc = @(x,t) sin(x(1));
 
 % params to show in filename of result file
 saveParams = datestr(clock);
