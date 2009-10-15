@@ -16,6 +16,7 @@ function syncPlot(varargin)
     actGain = NaN;
     senGain = NaN;
     sigmaW = NaN;
+    Yindext = NaN;
     
     tellS = NaN;
     incrS = NaN;
@@ -45,6 +46,9 @@ function syncPlot(varargin)
                 i = i+1;
             case 'Fs'
                 Fs = varargin{i+1};
+                i = i+1;
+            case 'Yindext'
+                Yindext = varargin{i+1};
                 i = i+1;
             case 'thresh'
                 thresh = varargin{i+1};
@@ -119,7 +123,7 @@ function syncPlot(varargin)
                 elseif isnan(N)
                     error('SyncPlot: N not specified.')
                 end
-                spTrajecFFT(T,Y,N,incrS,tellS,0);
+                spTrajecFFT(T,Y,N,incrS,tellS,Yindext,0);
             case 'fft'
                 if isnan(T)
                     error('SyncPlot: T not specified.')
@@ -137,7 +141,7 @@ function syncPlot(varargin)
                 if isnan(ssFreqs)
                     [X,f,m,mind,ssFreqs] = spCalcFFT(Y,Fs,tauC);
                 end
-                spTrajecFFT(T,Y,N,incrS,tellS,1,X,f,m,mind);
+                spTrajecFFT(T,Y,N,incrS,tellS,Yindext,1,X,f,m,mind);
             case 'dendro'
                 if isnan(T)
                     error('SyncPlot: T not specified.')
@@ -170,7 +174,7 @@ function syncPlot(varargin)
                     syncTime = spCalcSynctime(T,C,N,rhoC,tauC,thresh);
                 end
                 spSquares(syncTime,tellS,incrS);
-                case 'freq'
+            case 'freq'
                 if isnan(T)
                     error('SyncPlot: T not specified.')
                 elseif ~iscell(C) && isnan(C)
@@ -184,10 +188,10 @@ function syncPlot(varargin)
                 elseif ~iscell(rhoN) && isnan(rhoN)
                     [L,rhoN,rhoC,rhoInf,tauC,tauWindow] = spCalcTau(T,C,threshTau);
                 end
-                if isnan(ssFreqs)
-                    [X,f,m,mind,ssFreqs] = spCalcFFT(Y,Fs,tauC);
+                if isnan(ssFreqs) 
+                    [X,f,m,mind,ssFreqs,extFreq] = spCalcFFT(Y,Fs,tauC,Yindext);
                 end
-                spFreq(ssFreqs,tellS,incrS);
+                spFreq(ssFreqs,tellS,incrS,extFreq);
         end
         i = i+1;
     end
