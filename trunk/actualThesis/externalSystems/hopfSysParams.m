@@ -10,4 +10,4 @@ IC(N+2,:) = (rand(1,numRuns)-0.5)*2*pi;
 IC(N+3,:) = (rand(1,numRuns)-0.5)*2*pi;
 
 % parameters for external ode function [ mu, tau]
-extParams = [ 0, 1 ];
+extParams = [ 0.01, 1 ];
