@@ -2,7 +2,7 @@
 clear all
 
 % add folders containing helper functions to path
-addpath('../externalSystems/','./plothelpers/')
+addpath('../externalSystems/','../plothelpers/')
 
 % load current parameters
 ipHopfSensorGain
