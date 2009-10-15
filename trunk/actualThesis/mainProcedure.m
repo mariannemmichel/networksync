@@ -7,6 +7,7 @@ else
     error('Parameter file not found. Exiting procedure.')
 end
 
+
 % add coupling factor
 M = coupFac * M;
 
@@ -64,23 +65,24 @@ end
     
 C = cell(1,numIncrem);
 Y = cell(numIncrem,numRuns);
-
-sensorAdj = senGain(1) * sensorAdj;
             
-opt = odeset('RelTol',1e-6);
+opt = odeset('RelTol',1e-6,'InitialStep',1e-4,'MaxStep',.05);
 
 for s=1:numIncrem
     
-    display(['Running ODE for ' dispIncrem ' = ' num2str(increm(s)) '...'])
-    
-    aG = actGain;
+    display(['Running ODE for ' dispIncrem ' = ' num2str(increm(s)) ':'])
+   
     if strcmp(dispIncrem,'Sensor Gain')
-        sensorAdj = senGain(s) * sensorAdj;
+        senAdj = senGain(s) * sensorAdj;
+        aG = actGain(1);
     elseif strcmp(dispIncrem,'Actuator Gain')
+        senAdj = senGain(1) * sensorAdj;
         aG = actGain(s);
+    else
+        senAdj = senGain(1) * sensorAdj;
+        aG = actGain(1);
     end
-       
-    param{5} = {sensorAdj, sensorFunc, actuatorFunc, aG};
+    param{5} = {senAdj, sensorFunc, actuatorFunc, aG};
     
     for i=1:numRuns
         
