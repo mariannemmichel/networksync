@@ -2,13 +2,14 @@
 clear all
 
 % add folders containing helper functions to path
-addpath('../externalSystems/','../plothelpers/')
-
-% change to parent directory
-cd ..
+addpath('..')
 
 % load current parameters
 ipHopfSensorGain
+
+% change dir & add paths
+cd ..
+addpath('./externalSystems/','./plothelpers/')
 
 % run main procedure
 mainProcedureToRun
