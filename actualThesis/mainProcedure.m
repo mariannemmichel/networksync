@@ -1,6 +1,8 @@
 
 clear
 
+addpath('./externalSystems/','./plothelpers/')
+
 if exist('internalParams.m', 'file')
     internalParams
 else
@@ -90,7 +92,7 @@ for s=1:numIncrem
         
         % calculate natural frequencies
         param{3} = calcW(meanW(s),sigmaW(s),N);
-        param{3}(1) = meanW(1); % hub gets no noise 
+        param{3}(1) = meanW(1); % hub gets no noise
 
         % ode
         [T,Y{s,i}] = ode113(@(t,y) sync(t,y,param),tSpan,IC(:,i),opt);
