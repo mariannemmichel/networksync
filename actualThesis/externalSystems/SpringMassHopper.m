@@ -22,8 +22,8 @@ function dy = SpringMassHopper(t,y,param,inputSignals,actGain)
 
     Grav=-9.81; % Gravity in m/s^2
     
-    Isig1=inputSignals{1};
-    Isig2=inputSignals{2};
+    %Isig1=inputSignals{1};
+    %Isig2=inputSignals{2};
 
 % Just for the testing
     Isig1=inputSignals{1}(t);
