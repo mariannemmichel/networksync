@@ -52,7 +52,7 @@ function dy = sync(t,y,param)
     dy(indComm,1) = W + sum(commAdj .* sin(r'-r),2) + ...
                   sensorSignals;
     
-    dy(indExt,1) = extSys(t,y,param{6},actuatorSignals,actGain);
+    dy(indExt,1) = extSys(t,y(indExt),param{6},actuatorSignals,actGain);
 
 end % end sync
 
