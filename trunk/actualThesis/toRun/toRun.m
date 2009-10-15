@@ -1,15 +1,14 @@
 
 clear all
+cd ..
+pth=pwd;
+cd toRun
 
 % add folders containing helper functions to path
-addpath('..')
+addpath(pth,[pth '\externalSystems\'],[pth '\plothelpers\'])
 
 % load current parameters
 ipHopfSensorGain
-
-% change dir & add paths
-cd ..
-addpath('./externalSystems/','./plothelpers/')
 
 % run main procedure
 mainProcedureToRun
